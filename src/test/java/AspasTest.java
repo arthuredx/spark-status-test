@@ -37,6 +37,26 @@ public class AspasTest {
         df2.show();
         String destination2 = "target/parquet-com-json";
         df2.write().format("parquet").mode(SaveMode.Overwrite).save(destination2);
+
+        String tags = " select 'inscríbete a mi programa \"soy abundante!\"' as utm_campaign, 'social' as utm_medium";
+        String tags_semAspas = " select '{\"utm_source\":\"linktree\",\"utm_medium\":\"social\"}' as tags";
+        Dataset<Row> df3 = spark.sql(tags);
+        df3.show(2);
+        String destination3 = "target/parquet-com-gson";
+        df3.write().format("parquet").mode(SaveMode.Overwrite).save(destination3);
+        df3.createOrReplaceTempView("sourceDf2");
+        Dataset<Row> df4 = spark.sql("select *, map('utm_campaign',utm_campaign, 'utm_medium', utm_medium) as filtered_tags   from sourceDf2");
+        df4.show();
+        df4.write().format("parquet").mode(SaveMode.Overwrite).save(destination3);
+        df4.createOrReplaceTempView("sourceDf3");
+        Dataset<Row> df5 = spark.sql("select *, transform_values(filtered_tags, (k, v) -> regexp_replace(v, '%(?![0-9a-fA-F]{2})', '%25')   ) AS sanitized_tags from sourceDf3");
+        df5.show();
+        df5.write().format("parquet").mode(SaveMode.Overwrite).save(destination3);
+        df5.createOrReplaceTempView("sourceDf4");
+        Dataset<Row> df6 = spark.sql("select *, to_json(sanitized_tags) AS tags from sourceDf4");
+        df6.show();
+        df6.write().format("parquet").mode(SaveMode.Overwrite).save(destination3);
+
     }
 
     @Test

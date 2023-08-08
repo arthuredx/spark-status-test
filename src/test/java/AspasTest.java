@@ -53,7 +53,7 @@ public class AspasTest {
         df5.show();
         df5.write().format("parquet").mode(SaveMode.Overwrite).save(destination3);
         df5.createOrReplaceTempView("sourceDf4");
-        Dataset<Row> df6 = spark.sql("select *, to_json(sanitized_tags) AS tags from sourceDf4");
+        Dataset<Row> df6 = spark.sql("select *, regexp_replace(to_json(sanitized_tags), '(\\\\n|\\\\t|\\\\r|\\\\b)', '') AS tags from sourceDf4");
         df6.show();
         df6.write().format("parquet").mode(SaveMode.Overwrite).save(destination3);
 

@@ -42,7 +42,7 @@ public class AspasTest {
         String tags_semAspas = " select '{\"utm_source\":\"linktree\",\"utm_medium\":\"social\"}' as tags";
         Dataset<Row> df3 = spark.sql(tags);
         df3.show(2);
-        String destination3 = "target/parquet-com-gson";
+        String destination3 = "target/parquet-com-get_json";
         df3.write().format("parquet").mode(SaveMode.Overwrite).save(destination3);
         df3.createOrReplaceTempView("sourceDf2");
         Dataset<Row> df4 = spark.sql("select *, map('utm_campaign',utm_campaign, 'utm_medium', utm_medium) as filtered_tags   from sourceDf2");
@@ -56,6 +56,10 @@ public class AspasTest {
         Dataset<Row> df6 = spark.sql("select *, regexp_replace(to_json(sanitized_tags), '(\\\\n|\\\\t|\\\\r|\\\\b)', '') AS tags from sourceDf4");
         df6.show();
         df6.write().format("parquet").mode(SaveMode.Overwrite).save(destination3);
+        df6.createOrReplaceTempView("sourceDf5");
+        Dataset<Row> df7 = spark.sql("select *, get_json_object(tags, '$.utm_campaign') as utm_campaign_extract, get_json_object(tags, '$.utm_medium') as utm_medium_extract  from sourceDf5");
+        df7.show();
+        df7.write().format("parquet").mode(SaveMode.Overwrite).save(destination3);
 
     }
 
@@ -72,7 +76,7 @@ public class AspasTest {
 
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
 
-        String file = "part-00000-1cdb38fd-d5a2-414b-b555-97d67d227120.c000.snappy.parquet";
+        String file = "part-00005-d13c61e4-b79b-43c3-b3e3-155a2e9a8101.c000.snappy.parquet";
         String source = "/Users/arthur.edson/Downloads/"+file;
         Dataset<Row> df = spark.read().parquet(source).select("hub_transaction_datetime", "tags"); //.where("affiliation_code='T84834910'");
         df = df.where("tags LIKE '%soy abundante%'");

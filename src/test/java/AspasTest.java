@@ -57,7 +57,8 @@ public class AspasTest {
         df6.show();
         df6.write().format("parquet").mode(SaveMode.Overwrite).save(destination3);
         df6.createOrReplaceTempView("sourceDf5");
-        Dataset<Row> df7 = spark.sql("select *, get_json_object(tags, '$.utm_campaign') as utm_campaign_extract, get_json_object(tags, '$.utm_medium') as utm_medium_extract  from sourceDf5");
+        // código de produção das etl f_customer_event_session_tags e f_customer_event_preload
+        Dataset<Row> df7 = spark.sql("select get_json_object(tags, '$.utm_campaign') as utm_campaign_extract, get_json_object(tags, '$.utm_medium') as utm_medium_extract, tags, replace(to_json(sanitized_tags), '\\\\\"', '\\\\\\\\\"') as tags_new  from sourceDf5");
         df7.show();
         df7.write().format("parquet").mode(SaveMode.Overwrite).save(destination3);
 
@@ -76,9 +77,9 @@ public class AspasTest {
 
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
 
-        String file = "part-00005-d13c61e4-b79b-43c3-b3e3-155a2e9a8101.c000.snappy.parquet";
+        String file = "part-00001-0b09a16b-1da0-4a19-90ff-f7a5e155780d.c000.snappy.parquet";
         String source = "/Users/arthur.edson/Downloads/"+file;
-        Dataset<Row> df = spark.read().parquet(source).select("hub_transaction_datetime", "tags"); //.where("affiliation_code='T84834910'");
+        Dataset<Row> df = spark.read().parquet(source).select("shopper_session_code", "tags"); //.where("affiliation_code='T84834910'");
         df = df.where("tags LIKE '%soy abundante%'");
         df.show(10);
         String destination2 = "target/parquet-com-json-filtrado";
